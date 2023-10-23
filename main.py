@@ -45,8 +45,7 @@ class Window(WindowConfig):
     def init_agents(self):
         agents = np.zeros(AGENTS, dtype=Agent)
         agents['position'] = np.random.rand(AGENTS, 2) * 2 - 1
-        agents['angle'] = np.arctan2(
-            agents['position'][:, 1], agents['position'][:, 0])
+        agents['angle'] = np.random.rand(AGENTS) * math.pi * 2
         return agents
 
     def load_shader(self, shader_filename):
@@ -71,8 +70,6 @@ class Window(WindowConfig):
 
         self.buffer.bind_to_storage_buffer(binding=0)
         self.compute_shader.run(group_x=AGENTS)
-
-        # print(np.frombuffer(self.buffer.read(),dtype=Agent))
 
         self.vao.render(moderngl.POINTS)
 
