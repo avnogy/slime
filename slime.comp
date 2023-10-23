@@ -1,0 +1,39 @@
+#version 460
+#define MOVE_SPEED 70.0
+
+struct Agent {
+    vec2 position;
+    float angle;
+};
+
+layout(local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer AgentsBuffer {
+    Agent agents[];
+};
+
+
+// uniform float frame_time;
+
+uint hash(uint state) {
+    state ^= 2747636419u;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    return state;
+}
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    Agent agent = agents[id];
+
+    // float speed = 0.001 + frame_time;
+    // agent.position.x += cos(agent.angle);// * speed;
+    // agent.position.y += sin(agent.angle);// * speed;
+    agent.position.x = 0.0;
+    agent.position.x = 0.0;
+
+    agents[id] = agent;
+}
