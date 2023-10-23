@@ -10,9 +10,12 @@ from moderngl_window import WindowConfig
 OPENGL_VERSION_NUMBER = (4, 6)
 WINDOW_TITLE = "Slime"
 WINDOW_RESOLUTION = [1280, 720]
-SLIME_SHADER_GROUPS = {"X": 16, "Y": 1, "Z": 1}
+SLIME_SHADER_GROUPS = {"X": 1, "Y": 1, "Z": 1}
 SHADERS_DIR = Path(__file__).parent
-AGENTS = 25000
+AGENTS = 40
+
+Agent = np.dtype(
+    [('position', 'f4', (2,)), ('angle', 'f4'), ('padding', 'f4')])
 
 
 class Window(WindowConfig):
@@ -29,6 +32,7 @@ class Window(WindowConfig):
         }
         print(shaders)
         self.program = self.ctx.program(**shaders)
+
         self.buffer = self.ctx.buffer(self.init_agents().tobytes())
         self.vao = self.ctx.simple_vertex_array(
             self.program, self.buffer, 'position')
@@ -38,16 +42,17 @@ class Window(WindowConfig):
 
         # self.compute_shader_frame_time = self.compute_shader["frame_time"]
 
-        self.slime_groups = tuple(
-            math.ceil(d / l) for d, l in zip((AGENTS, 1, 1), SLIME_SHADER_GROUPS.values()))
-
     def init_agents(self):
-        Agent = np.dtype([('position', 'f4', (2,)), ('angle', 'f4')])
         agents = np.zeros(AGENTS, dtype=Agent)
-        agents['position'] = np.random.rand(AGENTS, 2) * 2 - 1
-        agents['angle'] = np.arctan2(
-            agents['position'][:, 1], agents['position'][:, 0])
-        print(agents)
+        ps = np.linspace(-1.0, 1.0, AGENTS)
+        for i in range(len(ps)):
+            p = ps[i]
+            agents[i]['position'] = (p, p)
+            agents[i]['angle'] = p
+
+        # agents['position'] = np.random.rand(AGENTS, 2) * 2 - 1
+        # agents['angle'] = np.arctan2(
+            # agents['position'][:, 1], agents['position'][:, 0])
         return agents
 
     def load_shader(self, shader_filename):
@@ -71,7 +76,9 @@ class Window(WindowConfig):
         # self.compute_shader_frame_time.value = frame_time
 
         self.buffer.bind_to_storage_buffer(binding=0)
-        self.compute_shader.run(*self.slime_groups)
+        self.compute_shader.run(group_x=AGENTS)
+
+        # print(np.frombuffer(self.buffer.read(),dtype=Agent))
 
         self.vao.render(moderngl.POINTS)
 
